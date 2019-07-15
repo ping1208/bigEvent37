@@ -129,6 +129,16 @@
             });
 
         });
+        // 显示个人登录信息
+        $.get({
+            url: 'http://localhost:8000/admin/getuser',
+            success: function (res) {
+                // 把对应的名字还有对应的头像显示在对应的标签中
+                $('.user_info').children('span').html('欢迎&nbsp;&nbsp;' + res.data.nickname);
+                $('.user_info').children('img').attr('src', res.data.user_pic);
+                $('.user_center_link').children('img').attr('src', res.data.user_pic);
+            }
+        });
     </script>
 </body>
 
