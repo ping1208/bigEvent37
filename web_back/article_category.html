@@ -72,7 +72,8 @@
                 <tfoot>
                     <tr>
                         <td colspan="3" class="text-center">
-                            <a href="#" class="btn btn-success" data-toggle="modal" data-target="#addModal">新增分类</a>
+                            <a href="#" class="btn btn-success btnAddCate" data-toggle="modal"
+                                data-target="#addModal">新增分类</a>
                         </td>
                     </tr>
                 </tfoot>
@@ -89,13 +90,16 @@
                 </div>
                 <div class="modal-body">
                     <form>
+                        <!-- 这是用来保存id的标签 -->
+                        <!-- 这是一个隐藏域,默认就有隐藏效果,普通用户不可见,程序员有用 -->
+                        <input type="hidden" class="id">
                         <div class="form-group">
                             <label for="recipient-name" class="control-label">分类名称:</label>
-                            <input type="text" class="form-control" id="recipient-name">
+                            <input type="text" class="form-control name" id="recipient-name">
                         </div>
                         <div class="form-group">
                             <label for="message-text" class="control-label">分类别名:</label>
-                            <input type="text" class="form-control" id="recipient-slug">
+                            <input type="text" class="form-control slug" id="recipient-slug">
                         </div>
                     </form>
                 </div>
@@ -114,21 +118,16 @@
         });
 
         $('#model_shutoff').click(function () {
-            alert('shutoff');
+            alert('确认取消吗');
             $('#addModal').modal('hide');
         });
 
         $('#model_add').click(function () {
-            alert('add');
+            alert('执行成功');
             $('#addModal').modal('hide');
         });
 
-        $('.category_table').delegate('a', 'click', function () {
-            if ($(this).hasClass('btn-info')) {
-                $('#addModal .modal-title').html('修改分类名称');
-                $('#addModal').modal('show');
-            }
-        })      
+
     </script>
     <script src="./js/template-web.js"></script>
     <script type="text/html" id="tpl">
@@ -175,39 +174,91 @@
             //需求:一进来就发送ajax请求,显示所有的文章类别.
             getData();
 
-            // 新增文章分类
-            // 1.给新增按钮加点击事件
-            $('#model_add').on('click', function () {
-                //获取用户输入的信息
-                var cateName = $('#recipient-name').val().trim();
-                var cateSlug = $('#recipient-slug').val().trim();
-                $.ajax({
-                    type: "post",
-                    url: "http://localhost:8000/admin/category_add",
-                    data: {
-                        name: cateName,
-                        slug: cateSlug
-                    },
-                    success: function (res) {
-                        if (res.code == 200) {
-                            // 刷新页面
-                            // location.reload();
-                            //不刷新,再次发送ajax请求
-                            getData();
 
-                            //直接操作dom树,添加一个tr
-                            // var obj = {
-                            //     name: cateName,
-                            //     slug: cateSlug
-                            // };
-                            // var xxo = template('tpl2', obj);
-                            // $('tbody').append(xxo);
+            // 1.给弹出来的模态框新增或者编辑按钮加点击事件
+            $('#model_add').on('click', function () {
+                //通过判断这个按钮是否有btn-success,确定是新增还是编辑
+                if ($(this).hasClass('btn-success')) {
+                    //编辑
+                    // 获取修改后的name,slug,id
+                    var name = $('.modal-body .name').val();
+                    var slug = $('.modal-body .slug').val();
+                    var id = $('.modal-body .id').val();
+                    //发送修改请求
+                    $.ajax({
+                        type: "post",
+                        url: "http://localhost:8000/admin/category_edit",
+                        data: {
+                            id: id,
+                            name: name,
+                            slug: slug
+                        },
+                        success: function (res) {
+                            if (res.code == 200) {
+                                getData();
+                            }
                         }
-                    }
-                });
+                    });
+                }
+                else {
+                    // 新增文章分类
+                    //获取用户输入的信息
+                    var cateName = $('#recipient-name').val().trim();
+                    var cateSlug = $('#recipient-slug').val().trim();
+                    $.ajax({
+                        type: "post",
+                        url: "http://localhost:8000/admin/category_add",
+                        data: {
+                            name: cateName,
+                            slug: cateSlug
+                        },
+                        success: function (res) {
+                            if (res.code == 200) {
+                                // 刷新页面
+                                // location.reload();
+                                //不刷新,再次发送ajax请求
+                                getData();
+
+                                //直接操作dom树,添加一个tr
+                                // var obj = {
+                                //     name: cateName,
+                                //     slug: cateSlug
+                                // };
+                                // var xxo = template('tpl2', obj);
+                                // $('tbody').append(xxo);
+                            }
+                        }
+                    });
+                }
+
                 // 隐藏模态框
                 $('#myModal').modal('hide')
             });
+
+            //需求:点击新增分类 按钮,模态框中的title和按钮还原.
+            $('.btnAddCate').on('click', function () {
+                //修改模态框中的titie值和  确认按钮的文本
+                $('#addModal .modal-title').html('新增分类');
+                $('#model_add').text('新增').removeClass('btn-success');
+            });
+
+            // 给每个编辑文章按钮加点击事件,委托注册事件
+            $('tbody').on('click', '.btn-edit', function () {
+                //修改模态框中的titie值和  确认按钮的文本
+                $('#addModal .modal-title').html('修改分类');
+                $('#model_add').text('修改').addClass('btn-success');
+                $('#addModal').modal('show');
+
+                // 获取id,名称,别名 展示在修改框
+                var id = $(this).attr('data-id');
+                var slug = $(this).parent().prev().text();
+                var name = $(this).parent().prev().prev().text();
+                $('.modal-body .id').val(id);
+                $('.modal-body .name').val(name);
+                $('.modal-body .slug').val(slug);
+            });
+
+
             // 删除文章分类
             $('tbody').on('click', '.btn-delete', function (e) {
                 e.preventDefault();
