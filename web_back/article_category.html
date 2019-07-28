@@ -119,6 +119,8 @@
 
         $('#model_shutoff').click(function () {
             alert('确认取消吗');
+            $('#recipient-name').val('');
+            $('#recipient-slug').val('');
             $('#addModal').modal('hide');
         });
 
@@ -198,6 +200,8 @@
                         data: data,
                         success: function (res) {
                             if (res.code == 200) {
+                                $('.modal-body .name').val('');
+                                $('.modal-body .slug').val('');
                                 getData();
                             }
                         }
@@ -220,6 +224,8 @@
                                 // 刷新页面
                                 // location.reload();
                                 //不刷新,再次发送ajax请求
+                                $('#recipient-name').val('');
+                                $('#recipient-slug').val('');
                                 getData();
 
                                 //直接操作dom树,添加一个tr
